@@ -1,5 +1,6 @@
 package com.example.taskmanager_prma_r21207
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -57,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         noteAdapter.stopListening()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun onResume() {
         super.onResume()
         noteAdapter.notifyDataSetChanged()

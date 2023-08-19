@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.DocumentReference
 import java.util.*
 
@@ -28,6 +29,8 @@ class NoteDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note_details)
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
+
 
         titleNoteText = findViewById(R.id.titleNoteText)
         contentNoteText = findViewById(R.id.contentNoteText)
@@ -56,12 +59,13 @@ class NoteDetailsActivity : AppCompatActivity() {
             deleteTextViewButton.visibility = View.GONE
         }
 
-        saveNoteButton.setOnClickListener{ savenote()}
+        saveNoteButton.setOnClickListener{ saveNote()}
 
         deleteTextViewButton.setOnClickListener{ deleteNoteFromFirebase()}
 
     }
 
+    @SuppressLint("SuspiciousIndentation")
     private fun deleteNoteFromFirebase() {
 
         val documentReference : DocumentReference = Utility.referenceForNotes().document(docId)
@@ -76,7 +80,7 @@ class NoteDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun savenote() {
+    private fun saveNote() {
         val title: String = titleNoteText.text.toString().trim()
         val content: String = contentNoteText.text.toString().trim()
         if (title.isEmpty()) {
@@ -92,25 +96,32 @@ class NoteDetailsActivity : AppCompatActivity() {
         saveNoteToFirebase(note)
     }
 
-    private fun saveNoteToFirebase(note : Note){
-        val documentReference : DocumentReference = if(isEditMode){
-            Utility.referenceForNotes().document(docId)
-        }else{
-            Utility.referenceForNotes().document()
-        }
-        documentReference.set(note).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-               if(isEditMode){
-                   Utility.showToast(this,"Note update successfully")
-               }
-                else{
-                   Utility.showToast(this,"Note added successfully")
-               }
+    private fun saveNoteToFirebase(note: Note) {
+        if (Utility.isNetworkAvailable(this)) {
+            val documentReference: DocumentReference = if (isEditMode) {
+                Utility.referenceForNotes().document(docId)
             } else {
-                Utility.showToast(this,"Failed while adding note")
+                Utility.referenceForNotes().document()
             }
+            documentReference.set(note).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    if (isEditMode) {
+                        Utility.showToast(this, "Note updated successfully")
+                    } else {
+                        Utility.showToast(this, "Note added successfully")
+                    }
+                } else {
+                    Utility.showToast(this, "Failed while adding note")
+                }
+                isEditMode = false
+                finish()
+            }
+        } else {
+            LocalStorage.saveNoteLocally(this, note)
+            Utility.showToast(this, "Note saved locally. It will be synchronized when online.")
             isEditMode = false
             finish()
         }
     }
+
 }
