@@ -116,11 +116,6 @@ class NoteDetailsActivity : AppCompatActivity() {
                 isEditMode = false
                 finish()
             }
-        } else {
-            LocalStorage.saveNoteLocally(this, note)
-            Utility.showToast(this, "Note saved locally. It will be synchronized when online.")
-            isEditMode = false
-            finish()
         }
     }
 
